@@ -1,6 +1,9 @@
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import $ from "jquery";
+import 'datatables.net-dt/css/dataTables.dataTables.css';
+import "datatables.net";
 
 const NPIMSProperty = (props) => (
   <tr>
@@ -38,11 +41,21 @@ export default class PropertiesList extends Component {
     axios
       .get("http://localhost:5000/properties/")
       .then((response) => {
-        this.setState({ properties: response.data });
+        this.setState({ properties: response.data }, () => {
+          // Initialize DataTables after setting the state
+          this.initializeDataTable();
+        });
       })
       .catch((error) => {
         console.log(error);
       });
+  }
+
+  componentWillUnmount() {
+    // Cleanup DataTable on unmount
+    if ($.fn.DataTable.isDataTable("#propertiesTable")) {
+      $("#propertiesTable").DataTable().destroy(true);
+    }
   }
 
   deleteProperty(id) {
@@ -52,6 +65,17 @@ export default class PropertiesList extends Component {
 
     this.setState({
       properties: this.state.properties.filter((el) => el._id !== id),
+    }, () => {
+      this.initializeDataTable(); // Reinitialize DataTable after deletion
+    });
+  }
+
+  initializeDataTable() {
+    // Initialize DataTable
+    $("#propertiesTable").DataTable({
+      // You can add more options here, such as search, paging, etc.
+      responsive: true,
+      destroy: true, // Ensure that we can reinitialize it
     });
   }
 
@@ -70,8 +94,8 @@ export default class PropertiesList extends Component {
   render() {
     return (
       <div>
-        <h3>All Properties</h3>
-        <table className="table">
+        <h3>All Properties!!!</h3>
+        <table id="propertiesTable" className="display">
           <thead className="thead-light">
             <tr>
               <th>Property Number</th>
